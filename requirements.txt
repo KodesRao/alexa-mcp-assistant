@@ -1,0 +1,2 @@
+# MCP Python SDK, v1 line (FastMCP API). Serves protocol 2025-11-25 over Streamable HTTP.
+mcp[cli]>=1.26,<2
