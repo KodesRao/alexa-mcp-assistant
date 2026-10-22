@@ -1,4 +1,12 @@
+
+cloudflared
+cloudflared.tgz
+
+cloudflared
+cloudflared.tgz
+
+.env
 .venv/
 __pycache__/
-.env
-*.log
+.idea/
+.DS_Store

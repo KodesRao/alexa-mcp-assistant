@@ -1,51 +1,58 @@
-# ShopShield: Safe Shopping for Alexa+
+# ShopShield: shopping scam protection for Alexa+ (MCP server)
 
-ShopShield is a self-hosted MCP server that lets Alexa+ check online deals and stores
-for scam and counterfeit warning signs, and answer in short, voice-safe sentences.
-
-> Built for the Build, Ship, Shape: Amazon Developer Hackathon (Alexa+ track).
+An MCP server (streamable HTTP, endpoint `/mcp`) that helps shoppers avoid scams and fake products.
+Voice-first: every tool returns a short `speech` field plus details.
 
 ## Tools
-
 | Tool | What it does |
-|------|--------------|
-| `check_deal` | Checks price, payment method, urgency, and replica language in a deal. |
-| `check_store` | Checks a store web address for lookalike and risky-domain patterns. |
+|---|---|
+| `find_official_price` | Official brand-store price (Gemini + Google Search) |
+| `compare_prices` | Official vs marketplace prices (Shopee, Lazada) |
+| `check_listing_wording` | Counterfeit signs in a title: disguised brand names, "1:1/OEM/AAA", hidden characters |
+| `scam_risk_verdict` | Wording checks + price vs official price, returns a 0-100 risk score |
+| `is_real_discount` | Checks a claimed "original price" against the official price |
 
-Each tool returns a `risk_level` (low, medium, high), the `signals` it found, and a
-`spoken_summary` for Alexa+ to read aloud. Results describe risk signals only. They do
-not accuse any seller.
+Design: wording and scoring are **deterministic code** (`heuristics.py`), so they are fast and repeatable.
+Gemini is used only to research prices (`gemini_client.py`). Results are cached to protect free-tier quota.
 
-## Run locally
-
+## Run it (macOS)
 ```bash
-python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-python server.py                 # MCP endpoint: http://127.0.0.1:8000/mcp
+cp .env.example .env        # then put your Gemini key in .env
+python test_heuristics.py   # should print "ok" x7
+python server.py            # serves http://localhost:8000/mcp
 ```
+Get a free key at https://aistudio.google.com/apikey
 
-In a second terminal:
+No key yet? Test the wiring with fake data: `SHOPSHIELD_OFFLINE=1 python server.py`
 
+## Test with MCP Inspector
 ```bash
-python test_client.py            # lists tools and calls both of them
+npx @modelcontextprotocol/inspector
 ```
+Transport = Streamable HTTP, URL = `http://localhost:8000/mcp`, Connect, Tools, run `scam_risk_verdict`.
 
-## Tech
+## Expose to Alexa+
+```bash
+brew install ngrok
+ngrok http 8000
+```
+Use `https://<your-id>.ngrok-free.app/mcp` as the MCP server URL in the Alexa+ / Devpost setup.
+Follow the hackathon resources page for the exact registration steps. Keep both terminals open while demoing.
 
-- MCP spec 2025-11-25, Streamable HTTP transport (MCP Python SDK, FastMCP)
-- Rule engine for deterministic signals (`rules.py`)
-- Planned: Amazon Bedrock LLM layer for free-text signals
+## Demo script (voice)
+1. "Is a Nike Air Max 90 for 90 ringgit on Shopee legit?"
+2. "Check this title: N.i.k.e Air Max 1:1 OEM"
+3. "Is 300 ringgit a real discount if it says 900 ringgit before?"
+4. "Compare prices for the Sony WH-1000XM5."
 
-## Built during the hackathon
+## Troubleshooting
+- `421` / invalid host through ngrok: already handled (`transport_security` in `server.py`).
+- `429` from Gemini: free-tier limit. Wait a minute, or use the cache by repeating the same product.
+- `ModuleNotFoundError: mcp.server.fastmcp`: you got mcp 2.x. Run `pip install "mcp[cli]<2"`.
 
-All code in this repository was written during the submission period.
-
-## Known limits
-
-- Brand matching uses simple substring checks, so a domain like `pineapple-shop.com`
-  can match `apple`. To be fixed in the LLM layer.
-
-## License
-
-MIT
+## Ideas to extend (if time)
+Add brands to `BRANDS` in `heuristics.py`; add seller-age or review-count inputs to the score;
+add an API-key header check before public use.

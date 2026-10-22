@@ -1,42 +1,37 @@
-"""End-to-end check: connect over Streamable HTTP, list tools, call each tool.
-
-Start the server first (python server.py), then run: python test_client.py
-"""
-
 import asyncio
 import json
+import sys
 
 from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 
-SERVER_URL = "http://127.0.0.1:8000/mcp"
+URL = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8000/mcp"
+
+CALLS = [
+    ("check_listing_wording", {"title": "N.i.k.e Air Max 1:1 OEM"}),
+    ("scam_risk_verdict", {
+        "title": "N.i.k.e Air Max 1:1 OEM",
+        "listed_price": 90,
+        "product_name": "Nike Air Max 90",
+        "platform": "Shopee",
+    }),
+]
 
 
-async def main() -> None:
-    async with streamablehttp_client(SERVER_URL) as (read, write, _):
+async def main():
+    print("Connecting to", URL)
+    async with streamablehttp_client(URL) as (read, write, _):
         async with ClientSession(read, write) as session:
-            init = await session.initialize()
-            print("Negotiated protocol version:", init.protocolVersion)
-
+            await session.initialize()
             tools = await session.list_tools()
             print("Tools:", [t.name for t in tools.tools])
-
-            deal = await session.call_tool("check_deal", {
-                "product": "Nike Air Jordan 1",
-                "price": 45,
-                "usual_price": 180,
-                "store_url": "nike-outlet-sale.shop",
-                "brand": "nike",
-                "listing_text": "1:1 quality, only today!",
-                "payment_method": "bank transfer",
-            })
-            print("\ncheck_deal (risky):")
-            print(json.dumps(deal.structuredContent, indent=2))
-
-            store = await session.call_tool("check_store", {"store_url": "https://www.nike.com"})
-            print("\ncheck_store (official):")
-            print(json.dumps(store.structuredContent, indent=2))
+            for name, args in CALLS:
+                print(f"\n--- {name} ---")
+                result = await session.call_tool(name, args)
+                data = json.loads(result.content[0].text)
+                print("SPEECH:", data.get("speech"))
+                if data.get("lookup_error") or data.get("error"):
+                    print("PROBLEM:", data.get("lookup_error") or data.get("error"))
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+asyncio.run(main())
