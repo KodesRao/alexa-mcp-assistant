@@ -1,6 +1,6 @@
 # ShopShield: shopping scam protection for Alexa+ (MCP server)
 
-**Demo video: https://youtu.be/E6jl3r7TDik
+**Demo video:** https://youtu.be/E6jl3r7TDik
 
 An MCP server (streamable HTTP, endpoint `/mcp`) that helps shoppers avoid scams and fake products. Voice-first: every tool returns a short `speech` field plus details.
 
