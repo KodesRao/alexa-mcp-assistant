@@ -12,8 +12,22 @@ CALLS = [
     ("scam_risk_verdict", {
         "title": "N.i.k.e Air Max 1:1 OEM",
         "listed_price": 90,
+        "official_price": 429,
         "product_name": "Nike Air Max 90",
         "platform": "Shopee",
+    }),
+    ("scam_risk_verdict", {
+        "title": "Nike Air Max 90 Men's Running Shoes",
+        "listed_price": 410,
+        "official_price": 429,
+        "product_name": "Nike Air Max 90",
+        "platform": "Shopee",
+    }),
+    ("is_real_discount", {
+        "product": "Nike Air Max 90",
+        "sale_price": 300,
+        "claimed_original_price": 900,
+        "official_price": 429,
     }),
 ]
 
