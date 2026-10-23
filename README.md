@@ -4,7 +4,19 @@
 
 An MCP server (streamable HTTP, endpoint `/mcp`) that helps shoppers avoid scams and fake products. Voice-first: every tool returns a short `speech` field plus details.
 
-(keep your Tools table and Design paragraph exactly as they are)
+```markdown
+## Tools
+
+| Tool | What it does |
+|---|---|
+| `find_official_price` | Official brand-store price (Gemini + Google Search) |
+| `compare_prices` | Official vs marketplace prices (Shopee, Lazada) |
+| `check_listing_wording` | Counterfeit signs in a title: disguised brand names, "1:1/OEM/AAA", hidden characters |
+| `scam_risk_verdict` | Wording checks + price vs official price, returns a 0-100 risk score |
+| `is_real_discount` | Checks a claimed "original price" against the official price |
+
+Design: wording and scoring are **deterministic code** (`heuristics.py`), so they are fast and repeatable. Gemini is used only to research prices (`gemini_client.py`). Results are cached to protect free-tier quota.
+```
 
 ## Run it (macOS)
 
